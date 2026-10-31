@@ -1,39 +1,40 @@
--- ============================================================================
--- CS340 PA3 - cleanup script.  Drops EVERY PA3 object (views, triggers,
--- AuditLog, seq_AuditLog, pkg_audit, and your h_ helper objects).
--- It never touches the PA2 tables or data.
---   SQL> @cleanup_pa3;
--- ============================================================================
+-- Optional PA3 object cleanup. DDL commits pending work; use a fresh session.
+-- Drops only the 7 named views and 10 named triggers below.
+-- Preserves AuditLog, seq_AuditLog, pkg_audit, helpers, PA2 objects and data.
+-- Unexpected drop failures stop execution; only absent objects are ignored.
 SET SERVEROUTPUT ON
-SET FEEDBACK OFF
-
+WHENEVER SQLERROR EXIT FAILURE ROLLBACK
 DECLARE
-  PROCEDURE drop_it(p_type VARCHAR2, p_name VARCHAR2) IS
+  PROCEDURE drop_named(p_type VARCHAR2,p_name VARCHAR2) IS
+    n NUMBER;
   BEGIN
-    EXECUTE IMMEDIATE 'DROP ' || p_type || ' ' || p_name ||
-                      CASE WHEN p_type = 'TABLE' THEN ' CASCADE CONSTRAINTS' ELSE '' END;
-    DBMS_OUTPUT.PUT_LINE('dropped ' || p_type || ' ' || p_name);
-  EXCEPTION WHEN OTHERS THEN NULL;     -- did not exist
+    SELECT COUNT(*) INTO n FROM user_objects
+    WHERE object_type=p_type AND object_name=UPPER(p_name);
+    IF n=1 THEN
+      EXECUTE IMMEDIATE 'DROP '||p_type||' '||p_name;
+      DBMS_OUTPUT.PUT_LINE('Dropped '||p_type||' '||p_name);
+    END IF;
   END;
 BEGIN
-  -- every trigger in this schema (PA2 had none)
-  FOR r IN (SELECT trigger_name FROM user_triggers) LOOP
-    drop_it('TRIGGER', r.trigger_name);
-  END LOOP;
-  -- every view in this schema (PA2 had none)
-  FOR r IN (SELECT view_name FROM user_views) LOOP
-    drop_it('VIEW', r.view_name);
-  END LOOP;
-  -- helper objects students may have made (prefix h_)
-  FOR r IN (SELECT object_name, object_type FROM user_objects
-             WHERE object_type IN ('FUNCTION','PROCEDURE','PACKAGE','TYPE')
-               AND object_name LIKE 'H\_%' ESCAPE '\') LOOP
-    drop_it(r.object_type, r.object_name);
-  END LOOP;
-  drop_it('PACKAGE',  'pkg_audit');
-  drop_it('TABLE',    'AuditLog');
-  drop_it('SEQUENCE', 'seq_AuditLog');
+  drop_named('TRIGGER','trg_vw_CustomerBills_IO');
+  drop_named('TRIGGER','trg_Bill_Protect');
+  drop_named('TRIGGER','trg_BillAdjustments_Apply');
+  drop_named('TRIGGER','trg_PaymentDetails_Fee');
+  drop_named('TRIGGER','trg_TaxRates_Validity');
+  drop_named('TRIGGER','trg_Tariff_Validity');
+  drop_named('TRIGGER','trg_audit_Subsidy');
+  drop_named('TRIGGER','trg_audit_FixedCharges');
+  drop_named('TRIGGER','trg_audit_TaxRates');
+  drop_named('TRIGGER','trg_audit_Tariff');
+  drop_named('VIEW','vw_CustomerBills');
+  drop_named('VIEW','vw_ResidentialConnections');
+  drop_named('VIEW','vw_DivisionMonthlyRevenue');
+  drop_named('VIEW','vw_TariffRateHistory');
+  drop_named('VIEW','vw_ChargeComponents');
+  drop_named('VIEW','vw_BillPaymentStatus');
+  drop_named('VIEW','vw_ConnectionDirectory');
 END;
 /
-PROMPT PA3 objects removed. Run @setup_pa3 to start again.
-SET FEEDBACK ON
+PROMPT Fixed PA3 views/triggers removed. Audit infrastructure/history preserved.
+PROMPT Rebuild views.sql, then triggers.sql.
+WHENEVER SQLERROR CONTINUE

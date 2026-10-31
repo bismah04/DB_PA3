@@ -1,8 +1,13 @@
 -- ============================================================================
--- CS340 PA3 - Part 2: Triggers         Name: ____________  Roll no: ________
+-- CS340 PA3 - Part 2: Triggers
+-- Name:
+-- Roll Number:
+-- Section:
 -- Run with:  SQL> @triggers;   (after @setup_pa3 and @views)
--- Each trigger below is a compilable skeleton with the REQUIRED header
--- (timing, events, level).  Fill in the bodies.  Do not change the headers.
+-- Each trigger below is an unsolved skeleton with the REQUIRED header
+-- (timing, events, level). Fill in the bodies. Do not change the headers.
+-- Full requirements and edge cases: PA3_questions.md.
+-- Helpers, if needed, use prefix h_pa3_ and must appear before use.
 -- Remember: no COMMIT / ROLLBACK / autonomous transactions inside triggers.
 -- ============================================================================
 
@@ -52,7 +57,7 @@ END;
 CREATE OR REPLACE TRIGGER trg_Tariff_Validity
 FOR INSERT OR UPDATE ON Tariff
 COMPOUND TRIGGER
-  -- TODO: declare a collection that remembers the affected groups
+  -- TODO: shared declarations if needed for your statement-level checks
 
   BEFORE EACH ROW IS
   BEGIN
@@ -61,7 +66,7 @@ COMPOUND TRIGGER
 
   AFTER EACH ROW IS
   BEGIN
-    NULL;  -- TODO: remember :NEW.(ConnectionTypeCode, TariffType, Slab)
+    NULL;  -- TODO: collect relevant keys if needed by your approach
   END AFTER EACH ROW;
 
   AFTER STATEMENT IS
@@ -120,7 +125,7 @@ COMPOUND TRIGGER
 
   AFTER EACH ROW IS
   BEGIN
-    NULL;  -- TODO: update Bill; negative total -> -20021
+    NULL;  -- TODO: apply cumulative adjustment atomically; negative total -> -20021
   END AFTER EACH ROW;
 END trg_BillAdjustments_Apply;
 /
@@ -146,5 +151,3 @@ BEGIN
   NULL;  -- TODO
 END;
 /
-
-SHOW ERRORS

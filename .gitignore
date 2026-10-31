@@ -1,0 +1,23 @@
+# Local artifacts and connection material
+*.log
+*.zip
+*.bak
+.env
+.env.*
+Wallet*/
+wallet*/
+*.sso
+*.p12
+*.pem
+*.key
+tnsnames.ora
+sqlnet.ora
+
+# Course staff materials and separately distributed manual
+staff/
+staff_only/
+reference/
+grader/
+*Manual*
+*manual*
+latex/
